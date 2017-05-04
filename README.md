@@ -1,0 +1,2 @@
+# terraform_for_alibabacloud_examples
+Alibaba CloudのTerraformサンプル集
