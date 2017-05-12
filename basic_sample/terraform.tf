@@ -41,17 +41,6 @@ resource "alicloud_security_group_rule" "allow_http" {
   cidr_ip           = "0.0.0.0/0"
 }
 
-resource "alicloud_security_group_rule" "allow_https" {
-  type              = "ingress"
-  ip_protocol       = "tcp"
-  nic_type          = "intranet"
-  policy            = "accept"
-  port_range        = "443/443"
-  priority          = 2
-  security_group_id = "${alicloud_security_group.sg.id}"
-  cidr_ip           = "0.0.0.0/0"
-}
-
 # VPCの作成
 resource "alicloud_vpc" "vpc" {
   name = "terraform-vpc"
