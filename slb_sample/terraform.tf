@@ -1,11 +1,3 @@
-# この記事のサンプルコードです。
-# http://qiita.com/mosuke5/items/a65683ce6569bffd7ef0
-
-/*
- * API KEYはとても重要なデータです。
- * terraform本体のファイルには記述せず、
- * 変数ファイル(sample.tfvars)に記述しています。
- */
 variable "access_key" {}
 variable "secret_key" {}
 variable "region" {}
@@ -16,6 +8,30 @@ provider "alicloud" {
   access_key = "${var.access_key}"
   secret_key = "${var.secret_key}"
   region = "${var.region}"
+}
+
+# Create a new load balancer for classic
+resource "alicloud_slb" "slb" {
+  name                 = "terraform-slb"
+  internet             = true
+  internet_charge_type = "paybytraffic"
+
+  listener = [
+    {
+      "instance_port" = "80"
+      "lb_port"       = "80"
+      "lb_protocol"   = "http"
+      "bandwidth"     = "10"
+      "sticky_session" = "on"
+      "sticky_session_type" = "insert"
+      "cookie_timeout" = "1"
+    }
+  ]
+}
+
+resource "alicloud_slb_attachment" "slb_attachment" {
+    slb_id    = "${alicloud_slb.slb.id}"
+    instances = ["${alicloud_instance.web.*.id}"]
 }
 
 # セキュリティグループの作成
@@ -29,10 +45,6 @@ resource "alicloud_security_group" "sg" {
 resource "alicloud_security_group_rule" "allow_http" {
   type              = "ingress"
   ip_protocol       = "tcp"
-  /*
-   * Webサーバインターネットからの通信ですが、実際にインターネットと通信するのはEIPのため
-   * ECSのセキュリティグループのルール設定は"intranet"で問題ないです。
-   */ 
   nic_type          = "intranet"
   policy            = "accept"
   port_range        = "80/80"
@@ -54,6 +66,16 @@ resource "alicloud_vswitch" "vsw" {
   availability_zone = "${var.zone}"
 }
 
+# vpc内サーバはfumidaiサーバを経由してインターネットに出れるようにルーティング設定
+# fumidaiサーバへのフォワーディング設定は別途必要
+resource "alicloud_route_entry" "default" {
+  router_id             = "${alicloud_vpc.vpc.router_id}"
+  route_table_id        = "${alicloud_vpc.vpc.router_table_id}"
+  destination_cidrblock = "0.0.0.0/0"
+  nexthop_type          = "Instance"
+  nexthop_id            = "${alicloud_instance.fumidai.id}"
+}
+
 # ECSに紐付けるEIP(グローバルIP)の作成
 resource "alicloud_eip" "eip" {
   internet_charge_type = "PayByTraffic"
@@ -62,17 +84,29 @@ resource "alicloud_eip" "eip" {
 # 作成したEIPをECSと紐付けします
 resource "alicloud_eip_association" "eip_asso" {
   allocation_id = "${alicloud_eip.eip.id}"
-  instance_id   = "${alicloud_instance.web.id}"
+  instance_id   = "${alicloud_instance.fumidai.id}"
 }
 
 # ECSの作成
 resource "alicloud_instance" "web" {
+  count = 2
   instance_name = "terraform-ecs"
   availability_zone = "${var.zone}"
-  image_id = "m-6wec065ood8fic52mh6v" # image_idはaliyuncli使って調べるといいです
+  image_id = "m-6wec065ood8fic52mh6v" # CentOS7.3
   instance_type = "ecs.n4.small"
   io_optimized = "optimized"
   system_disk_category = "cloud_efficiency"
-  security_groups = ["${alicloud_security_group.sg.id}"] # セキュリティグループは複数設定できるのでListになってます
+  security_groups = ["${alicloud_security_group.sg.id}"]
+  vswitch_id = "${alicloud_vswitch.vsw.id}"
+}
+
+resource "alicloud_instance" "fumidai" {
+  instance_name = "terraform-ecs-fumidai"
+  availability_zone = "${var.zone}"
+  image_id = "m-6wec065ood8fic52mh6v" # CentOS7.3
+  instance_type = "ecs.n4.small"
+  io_optimized = "optimized"
+  system_disk_category = "cloud_efficiency"
+  security_groups = ["${alicloud_security_group.sg.id}"]
   vswitch_id = "${alicloud_vswitch.vsw.id}"
 }
