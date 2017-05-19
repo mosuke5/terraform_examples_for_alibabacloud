@@ -69,7 +69,7 @@ resource "alicloud_eip_association" "eip_asso" {
 resource "alicloud_instance" "web" {
   instance_name = "terraform-ecs"
   availability_zone = "${var.zone}"
-  image_id = "m-6wec065ood8fic52mh6v" # image_idはaliyuncli使って調べるといいです
+  image_id = "centos_7_3_64_40G_base_20170322.vhd"
   instance_type = "ecs.n4.small"
   io_optimized = "optimized"
   system_disk_category = "cloud_efficiency"
