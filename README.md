@@ -5,16 +5,18 @@ VPCネットワーク内にECSインスタンスを作成し、作成したECS�
 ![basic_sample](image/architecture_basic_sample.png)
 
 ## slb_sample
-SLBを使った構成のサンプル。
+SLBを使った構成のサンプル。  
 VPC内のWebサーバは、踏み台サーバを経由してインターネットに接続できるようにVRouterへのルーティング設定も行う。
 
 ![slb_sample](image/architecture_slb_sample.png)
 
 ## rds_sample
-RDSを使った構成のサンプル。
+RDSを使った構成のサンプル。  
 VPC内にWebサーバとRDSを構築。RDSへはWebサーバからのみアクセスできるようにホワイトリスト設定は。
 
 ![rds_sample](image/architecture_rds_sample.png)
 
 ## autoscaling_sample
-Comming Soon
+AutoScalingを使った構成のサンプル。  
+SLB配下のECSはAutoScalingにて作成。12-14時の間だけスケールする例を構築。
+![autoscaling_sample](image/architecture_autoscaling_sample.png)
