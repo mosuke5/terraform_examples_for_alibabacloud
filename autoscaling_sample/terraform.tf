@@ -105,8 +105,8 @@ resource "alicloud_instance" "fumidai" {
 
 resource "alicloud_ess_scaling_group" "scaling" {
   scaling_group_name = "terraform-scaling-group"
-  min_size           = 1
-  max_size           = 2
+  min_size           = 2
+  max_size           = 5
   removal_policies   = ["OldestInstance", "NewestInstance"]
   vswitch_id = "${alicloud_vswitch.vsw.id}"
   loadbalancer_ids = ["${alicloud_slb.slb.id}"]
@@ -121,4 +121,38 @@ resource "alicloud_ess_scaling_configuration" "config" {
   security_group_id = "${alicloud_security_group.sg.id}"
   active            = true
   scaling_configuration_name = "terraform-scaling-conf"
+}
+
+resource "alicloud_ess_scaling_rule" "rule-scale-out" {
+  scaling_rule_name = "terraform-scale-out"
+  scaling_group_id = "${alicloud_ess_scaling_group.scaling.id}"
+  adjustment_type  = "QuantityChangeInCapacity"
+  adjustment_value = 2
+  cooldown         = 60
+}
+
+resource "alicloud_ess_scaling_rule" "rule-scale-in" {
+  scaling_rule_name = "terraform-scale-in"
+  scaling_group_id = "${alicloud_ess_scaling_group.scaling.id}"
+  adjustment_type  = "QuantityChangeInCapacity"
+  adjustment_value = -2
+  cooldown         = 60
+}
+
+resource "alicloud_ess_schedule" "schedule-scale-out" {
+  scheduled_action    = "${alicloud_ess_scaling_rule.rule-scale-out.ari}"
+  launch_time         = "2017-05-23T03:00Z"  # UTC時間
+  scheduled_task_name = "terraform-schedule-scale-out"
+  recurrence_type     = "Daily"
+  recurrence_end_time = "2017-08-01T03:00Z"  # UTC時間
+  recurrence_value    = 1
+}
+
+resource "alicloud_ess_schedule" "schedule-scale-in" {
+  scheduled_action    = "${alicloud_ess_scaling_rule.rule-scale-in.ari}"
+  launch_time         = "2017-05-23T05:00Z"  # UTC時間
+  scheduled_task_name = "terraform-schedule-scale-in"
+  recurrence_type     = "Daily"
+  recurrence_end_time = "2017-08-01T05:00Z"  # UTC時間
+  recurrence_value    = 1
 }
