@@ -75,4 +75,5 @@ resource "alicloud_instance" "web" {
   system_disk_category = "cloud_efficiency"
   security_groups = ["${alicloud_security_group.sg.id}"] # セキュリティグループは複数設定できるのでListになってます
   vswitch_id = "${alicloud_vswitch.vsw.id}"
+  user_data = "#include\nhttps://raw.githubusercontent.com/mosuke5/terraform_for_alibabacloud_examples/master/basic_sample/provisioning.sh"
 }
