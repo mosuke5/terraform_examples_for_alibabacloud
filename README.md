@@ -26,6 +26,9 @@ VPCネットワーク内にECSインスタンスを作成し、作成したECS�
 
 ![basic_sample](image/architecture_basic_sample.png)
 
+## ansible_basic_sample
+basic_sampleをベースにユーザデータ機能を利用して、ECSインスタンス内部でAnsibleを実行させる例。
+
 ## slb_sample
 SLBを使った構成のサンプル。  
 VPC内のWebサーバは、踏み台サーバを経由してインターネットに接続できるようにVRouterへのルーティング設定も行う。

@@ -1,0 +1,9 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+  - name: be sure httpd is installed
+    yum: name=httpd state=installed
+
+  - name: be sure httpd is running and enabled
+    service: name=httpd state=started enabled=yes
