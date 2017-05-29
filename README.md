@@ -26,6 +26,12 @@ VPCネットワーク内にECSインスタンスを作成し、作成したECS�
 
 ![basic_sample](image/architecture_basic_sample.png)
 
+## basic_sample_with_ansible
+basic_sampleと構成は同様。  
+basic_sampleはユーザデータ機能でシェルスクリプトを用いてhttpdのインストールや起動を行っていた。  
+この例では、ユーザデータ機能でAnsibleを実行させてhttpdのインストールや起動を実施。  
+これにより、シェルスクリプトでは表現しづらい複雑な設定などに対応が可能になる。
+
 ## ansible_basic_sample
 basic_sampleをベースにユーザデータ機能を利用して、ECSインスタンス内部でAnsibleを実行させる例。
 
