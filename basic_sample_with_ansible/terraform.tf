@@ -5,6 +5,7 @@ variable "access_key" {}
 variable "secret_key" {}
 variable "region" {}
 variable "zone" {}
+variable "ecs_password" {}
 
 # Alicloud Providerの設定
 provider "alicloud" {
@@ -65,5 +66,6 @@ resource "alicloud_instance" "web" {
   system_disk_category = "cloud_efficiency"
   security_groups = ["${alicloud_security_group.sg.id}"]
   vswitch_id = "${alicloud_vswitch.vsw.id}"
+  password   = "${var.ecs_password}"
   user_data = "#include\nhttps://raw.githubusercontent.com/mosuke5/terraform_for_alibabacloud_examples/master/basic_sample_with_ansible/provisioning.sh"
 }
