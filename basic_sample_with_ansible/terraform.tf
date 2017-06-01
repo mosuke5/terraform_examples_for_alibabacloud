@@ -67,5 +67,5 @@ resource "alicloud_instance" "web" {
   security_groups = ["${alicloud_security_group.sg.id}"]
   vswitch_id = "${alicloud_vswitch.vsw.id}"
   password   = "${var.ecs_password}"
-  user_data = "#include\nhttps://raw.githubusercontent.com/mosuke5/terraform_for_alibabacloud_examples/master/basic_sample_with_ansible/provisioning.sh"
+  user_data = "${file("provisioning.sh")}"
 }
