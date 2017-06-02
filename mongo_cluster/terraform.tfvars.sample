@@ -1,7 +1,9 @@
 secret_key = ""
 access_key = ""
-region = "ap-southeast-1"
-zone = "ap-southeast-1a"
+region = "cn-shenzhen"
+zones = ["cn-shenzhen-a", "cn-shenzhen-b", "cn-shenzhen-b"]
+mongo_instances = ["ecs.n1.small","ecs.n1.small","ecs.n1.small"]
+os_image = "centos_7_3_64_40G_base_20170322.vhd"
 outbound_cidr = "0.0.0.0/0"
 vpc_cidr = "10.0.0.0/16"
 natgw_cidr = "10.0.128.0/20"
