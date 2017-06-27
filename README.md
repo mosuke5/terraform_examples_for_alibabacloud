@@ -55,7 +55,7 @@ AutoScalingを使った構成のサンプル。
 SLB配下のECSはAutoScalingにて作成。12-14時の間だけスケールする例を構築。
 ![autoscaling_sample](image/architecture_autoscaling_sample.png)
 
-## MongoDBクラスタを追加
+## mongo_cluster_sample
 マルチゾーンをわたるMongoDBクラスタを構築サンプル
 ![mongo](image/architecture_mongo_cluster.png)
 
@@ -77,3 +77,7 @@ mongo_primary_cidr = "10.0.0.0/19"
 mongo_secondary0_cidr = "10.0.32.0/19"
 mongo_secondary1_cidr = "10.0.64.0/19"
 ```
+
+## wordpress_sample(comming soon)
+ECSとRDSを使ったベーシックなWordPress環境のサンプル  
+![wordpress](image/architecture_wordpress_sample.png)
