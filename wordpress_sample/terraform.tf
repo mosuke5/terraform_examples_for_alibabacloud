@@ -71,16 +71,15 @@ resource "alicloud_eip_association" "eip_asso" {
 # ECSの作成
 resource "alicloud_instance" "web" {
   instance_name = "terraform-ecs"
+  host_name = "wordpress-ecs"
   availability_zone = "${var.zone}"
   image_id = "centos_7_3_64_40G_base_20170322.vhd"
-  instance_type = "ecs.n1.tiny"
-  #instance_type = "ecs.n4.small"
+  instance_type = "ecs.n4.small"
   io_optimized = "optimized"
   system_disk_category = "cloud_efficiency"
   security_groups = ["${alicloud_security_group.sg.id}"]
   vswitch_id = "${alicloud_vswitch.vsw.id}"
   user_data = "#!/bin/bash\necho \"${var.publickey}\" > /tmp/publickey\n${file("provisioning.sh")}"
-  password = "Test1234"
 }
 
 resource "alicloud_db_instance" "rds" {

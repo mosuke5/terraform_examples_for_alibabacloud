@@ -81,3 +81,40 @@ mongo_secondary1_cidr = "10.0.64.0/19"
 ## wordpress_sample(comming soon)
 ECSとRDSを使ったベーシックなWordPress環境のサンプル  
 ![wordpress](image/architecture_wordpress_sample.png)
+
+ECSへは下記が
+- `ecs-user`がセットアップ済み
+  - terraform.tfvarsで任意の公開鍵を設定してください
+- sshdはパスワード認証、rootログインは禁止の設定済み
+- `terraform apply`後は下記の設定をすること
+  - MySQLのホスト名はterraform実行後に出てくる`rds_connection_string`を参照する
+
+```
+$ cd /var/www/html/wordpress
+$ sudo cp wp-config-sample.php wp-config.php
+$ sudo vim wp-config.php
+/** WordPress のためのデータベース名 */
+define('DB_NAME', 'database_name_here');
+
+/** MySQL データベースのユーザー名 */
+define('DB_USER', 'username_here');
+
+/** MySQL データベースのパスワード */
+define('DB_PASSWORD', 'password_here');
+
+/** MySQL のホスト名 */
+define('DB_HOST', 'localhost');
+
+
+define('AUTH_KEY',         'put your unique phrase here');
+define('SECURE_AUTH_KEY',  'put your unique phrase here');
+define('LOGGED_IN_KEY',    'put your unique phrase here');
+define('NONCE_KEY',        'put your unique phrase here');
+define('AUTH_SALT',        'put your unique phrase here');
+define('SECURE_AUTH_SALT', 'put your unique phrase here');
+define('LOGGED_IN_SALT',   'put your unique phrase here');
+define('NONCE_SALT',       'put your unique phrase here');
+```
+
+設定が完了したらブラウザから接続してみよう。
+`http://<your eip address>/wordpress`
