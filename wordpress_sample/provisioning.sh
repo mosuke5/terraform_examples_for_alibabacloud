@@ -1,4 +1,3 @@
-#!/bin/bash
 yum install -y wget epel
 yum install -y ansible
 cd /root

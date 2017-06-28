@@ -2,6 +2,7 @@ variable "access_key" {}
 variable "secret_key" {}
 variable "region" {}
 variable "zone" {}
+variable "publickey" {}
 variable "database_user_name" {}
 variable "database_user_password" {}
 variable "database_name" {}
@@ -78,7 +79,8 @@ resource "alicloud_instance" "web" {
   system_disk_category = "cloud_efficiency"
   security_groups = ["${alicloud_security_group.sg.id}"]
   vswitch_id = "${alicloud_vswitch.vsw.id}"
-  #user_data = "#include\nhttps://raw.githubusercontent.com/mosuke5/terraform_for_alibabacloud_examples/master/basic_sample/provisioning.sh"
+  user_data = "#!/bin/bash\necho \"${var.publickey}\" > /tmp/publickey\n${file("provisioning.sh")}"
+  password = "Test1234"
 }
 
 resource "alicloud_db_instance" "rds" {
