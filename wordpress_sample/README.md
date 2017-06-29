@@ -1,7 +1,7 @@
 # ベーシックWordPress構築サンプル
 ## 概要
 ECSとRDSを利用したベーシックなWordPress環境のサンプル。  
-![wordpress](image/architecture_wordpress_sample.png)
+![wordpress](/image/architecture_wordpress_sample.png)
 
 ## 利用方法
 基本的に下記の方法で実行可能です。
