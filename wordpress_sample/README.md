@@ -17,6 +17,13 @@ $ terraform plan -var-file="terraform.tfvars"
 
 // クラウドへ反映
 $ terraform apply -var-file="terraform.tfvars"
+(略)
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+
+// 出力にRDSへの接続アドレスとEIPのアドレスが表示されます
+Outputs:
+rds_connection_string = xxxxxxxxx.rds.aliyuncs.com
+wordpress_eip = xx.xx.xx.xx
 
 // ECSへ接続
 $ ssh ecs-user@xx.xx.xx.xx
@@ -49,7 +56,7 @@ define('NONCE_SALT',       'put your unique phrase here');
 ```
 
 ## 利用開始
-設定が完了したらブラウザから接続してみよう。
+設定が完了したらブラウザから接続してみよう。  
 `http://<your eip address>/wordpress`
 
 ## ECSへのセットアップ内容
