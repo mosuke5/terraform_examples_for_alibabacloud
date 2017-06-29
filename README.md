@@ -1,7 +1,7 @@
 # Alibaba CloudのTerraformサンプル集
 ## はじめに
 - 本レポジトリは[Alibaba Cloud](https://jp.aliyun.com)で利用できるTerraformのサンプル集です。
-- Alibaba Cloudでは公式のTerraformの他に、Alibaba社が開発する独自のTerraformレポジトリがありますが、このサンプル集では公式Terraformを利用することを前提としています。
+- Alibaba CloudではTerraformの[プラグイン](https://github.com/alibaba/terraform-provider)を提供しています。こちらを一緒に利用してください。
 - `terraform.tfbars`をお使いの環境の設定に変更することで基本的に動作可能です
 - もしうまく動作しないや、ご要望あればIssueないしはPull requestしてください。
 
