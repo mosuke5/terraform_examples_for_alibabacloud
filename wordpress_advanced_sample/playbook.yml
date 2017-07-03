@@ -1,0 +1,63 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+  vars:
+    wordpress_url: "https://ja.wordpress.org/wordpress-4.8-ja.tar.gz"
+    user_name: "ecs-user"
+  tasks:
+  - name: be sure httpd is installed
+    yum: name=httpd state=installed
+
+  - name: be sure httpd is running and enabled
+    service: name=httpd state=started enabled=yes
+
+  - name: be sure php is installed
+    yum: name="{{ item }}" state=latest
+    with_items:
+    - php
+    - php-mysql
+
+  - name: download wordpress pkg
+    get_url:
+      url="{{ wordpress_url }}"
+      dest=/tmp/wordpress.tar.gz
+
+  - name: expand wordpress pkg
+    unarchive: src=/tmp/wordpress.tar.gz dest=/var/www/html/ copy=no
+
+  - name: change wordpress attributes
+    file: path=/var/www/html/wordpress/ owner=apache group=apache recurse=yes
+
+  - name: restart httpd
+    service: name=httpd state=restarted
+
+  - name: create general user
+    user:
+      name: "{{ user_name }}"
+
+  - name: change sudoers file
+    lineinfile: >
+      dest=/etc/sudoers
+      backup=yes
+      line="{{ user_name }} ALL=(ALL) NOPASSWD: ALL"
+
+  - name: create ssh dir in general user
+    authorized_key:
+      user: "{{ user_name }}"
+      state: present
+      key: "{{ lookup('file', '/tmp/publickey') }}"
+
+  - name: change sshd config(PermitRootLogin)
+    lineinfile: >
+      path=/etc/ssh/sshd_config
+      regexp='^PermitRootLogin'
+      line='PermitRootLogin no'
+
+  - name: change sshd config(PasswordAuthentication)
+    lineinfile: >
+      path=/etc/ssh/sshd_config
+      regexp='^PasswordAuthentication'
+      line='PasswordAuthentication no'
+
+  - name: restart sshd
+    service: name=sshd state=restarted
