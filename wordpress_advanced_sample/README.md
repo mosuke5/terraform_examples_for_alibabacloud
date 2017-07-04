@@ -25,8 +25,14 @@ Outputs:
 rds_connection_string = xxxxxxxxx.rds.aliyuncs.com
 wordpress_eip = xx.xx.xx.xx
 
-// ECSへ接続
+// 踏み台ECSへ接続
 $ ssh ecs-user@xx.xx.xx.xx
+
+// WordPress ECSへ接続
+$ ssh root@192.168.1.x
+
+// Provisioning
+$ wget 
 
 // WordPressの設定
 $ cd /var/www/html/wordpress

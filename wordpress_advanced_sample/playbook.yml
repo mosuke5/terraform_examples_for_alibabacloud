@@ -11,6 +11,9 @@
   - name: be sure httpd is running and enabled
     service: name=httpd state=started enabled=yes
 
+  - name: set healthcheck file
+    shell: "echo 'hello' > /var/www/html/index.html"
+
   - name: be sure php is installed
     yum: name="{{ item }}" state=latest
     with_items:
