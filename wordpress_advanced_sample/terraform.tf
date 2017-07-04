@@ -114,7 +114,7 @@ resource "alicloud_vpc" "vpc" {
 # vswitchの作成。VPCの中に作ります。
 resource "alicloud_vswitch" "vsw" {
   vpc_id            = "${alicloud_vpc.vpc.id}"
-  cidr_block        = "192.168.2.0/24"
+  cidr_block        = "192.168.1.0/24"
   availability_zone = "${var.zone}"
 }
 
