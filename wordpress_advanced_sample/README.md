@@ -4,12 +4,12 @@
 ![wordpress](/image/architecture_wordpress_advanced_sample.png)
 
 - SLBの構築
-  - リスナーの設定
-  - バックエンドサーバの設定
+  - リスナーの設定
+  - バックエンドサーバの設定
 - ECS(WordPress用)の構築
 - ECS(踏み台用)の構築
-  - NATサーバとしての設定
-  - VRouterのルーティングテーブルへの追加
+  - NATサーバとしての設定
+  - VRouterのルーティングテーブルへの追加
 - RDSの構築
 - VPCの構築
 
