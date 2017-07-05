@@ -1,6 +1,6 @@
 # Advanced WordPress構築サンプル
 ## 概要
-実践的なWordPress環境のサンプル
+実践的なWordPress環境のサンプル  
 ![wordpress](/image/architecture_wordpress_advanced_sample.png)
 
 - SLBの構築
