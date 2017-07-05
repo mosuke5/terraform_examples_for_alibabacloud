@@ -1,13 +1,23 @@
-# ベーシックWordPress構築サンプル
+# Advanced WordPress構築サンプル
 ## 概要
-ECSとRDSを利用したベーシックなWordPress環境のサンプル。  
+実践的なWordPress環境のサンプル
 ![wordpress](/image/architecture_wordpress_advanced_sample.png)
+
+- SLBの構築
+  - リスナーの設定
+  - バックエンドサーバの設定
+- ECS(WordPress用)の構築
+- ECS(踏み台用)の構築
+  - NATサーバとしての設定
+  - VRouterのルーティングテーブルへの追加
+- RDSの構築
+- VPCの構築
 
 ## 利用方法
 基本的に下記の方法で実行可能です。
 ```
 // 事前準備
-$ cd wordpress_sample // 実行したいサンプルへ移動
+$ cd wordpress_advanced_sample // 実行したいサンプルへ移動
 $ cp terraform.tfvars.sample terraform.tfvars
 $ vim terraform.tfvars 
   -> API KEYや公開鍵など必要情報更新
@@ -18,22 +28,22 @@ $ terraform plan -var-file="terraform.tfvars"
 // クラウドへ反映
 $ terraform apply -var-file="terraform.tfvars"
 (略)
-Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+Apply complete! Resources: x added, 0 changed, 0 destroyed.
 
 // 出力にRDSへの接続アドレスや踏み台のEIPのアドレスなどが表示されます
 Outputs:
-ecs_private_ip = 192.168.1.154,192.168.1.153
-fumidai_eip = 47.88.222.71
-slb_ip = 47.88.199.118
+ecs_private_ip = 192.168.1.xx,192.168.1.xx
+fumidai_eip = xx.xx.xx.xx
+slb_ip = yy.yy.yy.yy
 rds_connection_string = xxxxxxxxx.rds.aliyuncs.com
 
 // 踏み台ECSへ接続
 $ ssh ecs-user@xx.xx.xx.xx
 
 // WordPress ECSへ接続
-$ ssh root@192.168.1.x
+$ ssh root@192.168.1.xx
 
-// Provisioning
+// WordPress ECSの設定
 $ wget https://raw.githubusercontent.com/mosuke5/terraform_for_alibabacloud_examples/master/wordpress_advanced_sample/provisioning_wordpress.sh
 $ sh provisioning_wordpress.sh
 /* このスクリプトで下記を行います
@@ -73,15 +83,3 @@ define('NONCE_SALT',       'put your unique phrase here');
 ## 利用開始
 設定が完了したらブラウザから接続してみよう。  
 `http://<your slb address>/wordpress`
-
-## ECSへのセットアップ内容
-ECSへは下記の設定が行われます。
-- Apacheのインストール
-- PHPのインストール
-- WordPressソースコードの配置
-- `ecs-user`の作成
-  - `ecs-user`のsudoersへの追加
-  - terraform.tfvarsで指定した公開鍵の配置
-- sshdの設定
-  - 踏み台サーバはsshdはパスワード認証、rootログインの禁止
-  - WordPressサーバはsshdはrootログインの禁止
