@@ -34,6 +34,12 @@ $ ssh root@192.168.1.x
 // Provisioning
 $ wget https://raw.githubusercontent.com/mosuke5/terraform_for_alibabacloud_examples/master/wordpress_advanced_sample/provisioning_wordpress.sh
 $ sh provisioning_wordpress.sh
+/* このスクリプトで下記を行います
+  - ecs-userの作成(パスワードはデフォルトではTest1234)
+  - php, apacheのインストール
+  - wordpressの配置
+  - sshの設定(rootログイン禁止)
+*/
 
 // WordPressの設定
 $ cd /var/www/html/wordpress
