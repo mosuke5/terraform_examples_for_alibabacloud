@@ -37,6 +37,7 @@
   - name: create general user
     user:
       name: "{{ user_name }}"
+      password: "{{ 'Test1234'|password_hash('sha512') }}"
 
   - name: change sudoers file
     lineinfile: >
@@ -55,12 +56,6 @@
       path=/etc/ssh/sshd_config
       regexp='^PermitRootLogin'
       line='PermitRootLogin no'
-
-  - name: change sshd config(PasswordAuthentication)
-    lineinfile: >
-      path=/etc/ssh/sshd_config
-      regexp='^PasswordAuthentication'
-      line='PasswordAuthentication no'
 
   - name: restart sshd
     service: name=sshd state=restarted

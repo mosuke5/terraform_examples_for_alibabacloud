@@ -8,6 +8,7 @@
   - name: create general user
     user:
       name: "{{ user_name }}"
+      password: "{{ 'Test1234'|password_hash('sha512') }}"
 
   - name: change sudoers file
     lineinfile: >
