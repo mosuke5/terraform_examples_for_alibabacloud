@@ -1,7 +1,7 @@
 # ベーシックWordPress構築サンプル
 ## 概要
 ECSとRDSを利用したベーシックなWordPress環境のサンプル。  
-![wordpress](/image/architecture_wordpress_sample.png)
+![wordpress](/image/architecture_wordpress_advanced_sample.png)
 
 ## 利用方法
 基本的に下記の方法で実行可能です。
@@ -20,10 +20,12 @@ $ terraform apply -var-file="terraform.tfvars"
 (略)
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
-// 出力にRDSへの接続アドレスとEIPのアドレスが表示されます
+// 出力にRDSへの接続アドレスや踏み台のEIPのアドレスなどが表示されます
 Outputs:
+ecs_private_ip = 192.168.1.154,192.168.1.153
+fumidai_eip = 47.88.222.71
+slb_ip = 47.88.199.118
 rds_connection_string = xxxxxxxxx.rds.aliyuncs.com
-wordpress_eip = xx.xx.xx.xx
 
 // 踏み台ECSへ接続
 $ ssh ecs-user@xx.xx.xx.xx
@@ -70,7 +72,7 @@ define('NONCE_SALT',       'put your unique phrase here');
 
 ## 利用開始
 設定が完了したらブラウザから接続してみよう。  
-`http://<your eip address>/wordpress`
+`http://<your slb address>/wordpress`
 
 ## ECSへのセットアップ内容
 ECSへは下記の設定が行われます。
@@ -80,4 +82,6 @@ ECSへは下記の設定が行われます。
 - `ecs-user`の作成
   - `ecs-user`のsudoersへの追加
   - terraform.tfvarsで指定した公開鍵の配置
-- sshdはパスワード認証、rootログインの禁止
+- sshdの設定
+  - 踏み台サーバはsshdはパスワード認証、rootログインの禁止
+  - WordPressサーバはsshdはrootログインの禁止
