@@ -33,6 +33,7 @@ $ ssh root@192.168.1.x
 
 // Provisioning
 $ wget https://raw.githubusercontent.com/mosuke5/terraform_for_alibabacloud_examples/master/wordpress_advanced_sample/provisioning_wordpress.sh
+$ sh provisioning_wordpress.sh
 
 // WordPressの設定
 $ cd /var/www/html/wordpress
