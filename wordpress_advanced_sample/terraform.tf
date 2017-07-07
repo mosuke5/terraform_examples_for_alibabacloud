@@ -132,8 +132,8 @@ resource "alicloud_eip_association" "eip_asso" {
 # ECSの作成
 resource "alicloud_instance" "web" {
   count = 2
-  instance_name = "terraform-ecs-${count.index}"
-  host_name = "wordpress-ecs-${count.index}"
+  instance_name = "terraform-ecs-web${count.index}"
+  host_name = "wordpress-ecs-web${count.index}"
   availability_zone = "${var.zone}"
   image_id = "centos_7_3_64_40G_base_20170322.vhd"
   instance_type = "ecs.n4.small"
