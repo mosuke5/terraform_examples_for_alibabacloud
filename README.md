@@ -34,3 +34,4 @@ $ terraform destroy -var-file="terraform.tfvars"
 - [AutoScalingサンプル](/autoscaling_sample/)
 - [mongoDBクラスターサンプル](/mongo_cluster_sample/)
 - [WordPressサンプル](/wordpress_sample/)
+- [WordPressアドバンスドサンプル](/wordpress_advanced_sample/)
