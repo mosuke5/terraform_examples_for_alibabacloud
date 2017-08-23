@@ -1,3 +1,4 @@
+project_name = "wp-sample"
 access_key = "xxxxxxxxxxxxxxxxxx"
 secret_key = "xxxxxxxxxxxxxxxxxx"
 region = "ap-northeast-1"

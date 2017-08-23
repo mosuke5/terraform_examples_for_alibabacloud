@@ -1,3 +1,4 @@
+variable "project_name" {}
 variable "access_key" {}
 variable "secret_key" {}
 variable "region" {}
@@ -18,7 +19,7 @@ provider "alicloud" {
 
 # Create a new load balancer for classic
 resource "alicloud_slb" "slb" {
-  name                 = "terraform-slb"
+  name                 = "${var.project_name}-slb"
   internet             = true
   internet_charge_type = "paybytraffic"
 
@@ -52,7 +53,7 @@ resource "alicloud_slb_attachment" "slb_attachment" {
 
 # セキュリティグループの作成
 resource "alicloud_security_group" "sg_fumidai" {
-  name   = "terraform-sg-fumidai"
+  name   = "${var.project_name}-sg-fumidai"
   vpc_id = "${alicloud_vpc.vpc.id}"
 }
 
@@ -78,8 +79,19 @@ resource "alicloud_security_group_rule" "fumidai_allow_all_from_internal" {
   cidr_ip           = "192.168.0.0/16"
 }
 
+resource "alicloud_security_group_rule" "fumidai_allow_all_to_external" {
+  type              = "egress"
+  ip_protocol       = "all"
+  nic_type          = "intranet"
+  policy            = "accept"
+  port_range        = "-1/-1"
+  priority          = 1
+  security_group_id = "${alicloud_security_group.sg_fumidai.id}"
+  cidr_ip           = "0.0.0.0/0"
+}
+
 resource "alicloud_security_group" "sg_wordpress" {
-  name   = "terraform-sg-wordpress"
+  name   = "${var.project_name}-sg-wordpress"
   vpc_id = "${alicloud_vpc.vpc.id}"
 }
 
@@ -107,7 +119,7 @@ resource "alicloud_security_group_rule" "wordpress_allow_ssh" {
 
 # VPCの作成
 resource "alicloud_vpc" "vpc" {
-  name = "terraform-vpc"
+  name = "${var.project_name}-vpc"
   cidr_block = "192.168.0.0/16"
 }
 
@@ -132,12 +144,11 @@ resource "alicloud_eip_association" "eip_asso" {
 # ECSの作成
 resource "alicloud_instance" "web" {
   count = 2
-  instance_name = "terraform-ecs-web${count.index}"
+  instance_name = "${var.project_name}-ecs-web${count.index}"
   host_name = "wordpress-ecs-web${count.index}"
   availability_zone = "${var.zone}"
   image_id = "centos_7_3_64_40G_base_20170322.vhd"
   instance_type = "ecs.n4.small"
-  io_optimized = "optimized"
   system_disk_category = "cloud_efficiency"
   security_groups = ["${alicloud_security_group.sg_wordpress.id}"]
   vswitch_id = "${alicloud_vswitch.vsw.id}"
@@ -147,12 +158,11 @@ resource "alicloud_instance" "web" {
 
 # ECSの作成
 resource "alicloud_instance" "fumidai" {
-  instance_name = "terraform-ecs-fumidai"
+  instance_name = "${var.project_name}-ecs-fumidai"
   host_name = "wordpress-ecs-fumidai"
   availability_zone = "${var.zone}"
   image_id = "centos_7_3_64_40G_base_20170322.vhd"
   instance_type = "ecs.n4.small"
-  io_optimized = "optimized"
   system_disk_category = "cloud_efficiency"
   security_groups = ["${alicloud_security_group.sg_fumidai.id}"]
   vswitch_id = "${alicloud_vswitch.vsw.id}"
@@ -171,7 +181,7 @@ resource "alicloud_route_entry" "default" {
 resource "alicloud_db_instance" "rds" {
     engine = "MySQL"
     engine_version = "5.6"
-    db_instance_class = "rds.mysql.t1.small"
+    db_instance_class = "rds.mysql.s1.small"
     db_instance_storage = "10"
     db_instance_net_type = "Intranet"
     vswitch_id = "${alicloud_vswitch.vsw.id}"

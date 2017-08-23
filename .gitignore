@@ -3,3 +3,4 @@
 *.tfstate
 *.tfstate.backup
 *.log
+.terraform/
