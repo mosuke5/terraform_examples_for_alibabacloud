@@ -21,7 +21,7 @@ provider "alicloud" {
 # セキュリティグループの作成
 resource "alicloud_security_group" "sg" {
   name   = "terraform-sg"
-  vpc_id = "${alicloud_vpc.vpc.id}" # セキュリティグループはVPCにひも付きます
+  vpc_id = "${alicloud_vpc.vpc.id}"
 }
 
 # セキュリティグループのルール設定
@@ -29,10 +29,6 @@ resource "alicloud_security_group" "sg" {
 resource "alicloud_security_group_rule" "allow_http" {
   type              = "ingress"
   ip_protocol       = "tcp"
-  /*
-   * Webサーバインターネットからの通信ですが、実際にインターネットと通信するのはEIPのため
-   * ECSのセキュリティグループのルール設定は"intranet"で問題ないです。
-   */ 
   nic_type          = "intranet"
   policy            = "accept"
   port_range        = "80/80"
@@ -73,7 +69,7 @@ resource "alicloud_instance" "web" {
   instance_type = "ecs.n4.small"
   io_optimized = "optimized"
   system_disk_category = "cloud_efficiency"
-  security_groups = ["${alicloud_security_group.sg.id}"] # セキュリティグループは複数設定できるのでListになってます
+  security_groups = ["${alicloud_security_group.sg.id}"]
   vswitch_id = "${alicloud_vswitch.vsw.id}"
   user_data = "#include\nhttps://raw.githubusercontent.com/mosuke5/terraform_for_alibabacloud_examples/master/basic_sample/provisioning.sh"
 }
