@@ -1,5 +1,35 @@
-# ベーシックサンプル
-VPCネットワーク内にECSインスタンスを作成し、作成したECSインスタンスに対し、EIPとセキュリティグループの設定をする基本サンプル。
-また、ユーザデータ機能を利用して稼働させるインスタンスには`httpd`をインストール起動している。
+# Basic example
+This is most basic example. This will create following resources.
+1. Create VPC
+1. Create Vswitch
+1. Create Security Group and set some rules
+1. Create an ECS instance in Vswitch
+1. Create EIP and bind it to ECS instance
+1. Provision httpd to ECS instance with Userdata function
 
-![basic_sample](/image/architecture_basic_sample.png)
+[Overview](https://docs.google.com/presentation/d/1pqtbiJRGc3uUm8ulhMBf4SWm2WPCCrhgUInjm9DMYdc/edit?ts=5b1df94f#slide=id.g3c4891986d_1_0)
+
+## How to use
+First you need to chnage configuration to yours.
+```
+$ cp terraform.tfvars.sample terrafrom.tfvars
+$ vim terraform.tfvars
+ => Edit variables with your favorite editor.
+```
+
+Deploy to Alibaba Cloud
+```
+$ terraform apply
+Apply complete! Resources: 7 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+eip = xx.xx.xx.xx
+```
+
+Access eip address outputs show with web browser.
+![overview](/basic_sample/overview.png)
+
+
+## Reference(Japanese)
+http://qiita.com/mosuke5/items/a65683ce6569bffd7ef0

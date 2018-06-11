@@ -3,7 +3,7 @@
 # Terraform Example for Alibaba Cloud
 - This repository is Terraform example list for Alibaba Cloud
 - Alibaba Cloud provides [terraform-provider](https://github.com/alibaba/terraform-provider). Let's use this.
-- In order to use this example, you need to change `terraform.tfbars` to your settings.
+- In order to use this example, you need to change `terraform.tfvars` to your settings.
 - Contributions and Issues are welcome and will be merged via PRs.
 
 ## Examples
