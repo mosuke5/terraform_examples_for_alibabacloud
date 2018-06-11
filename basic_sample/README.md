@@ -25,7 +25,7 @@ Outputs:
 eip = xx.xx.xx.xx
 ```
 
-Access eip address with web browser.
+Access eip address with web browser.  
 ![http_output](/basic_sample/http_output.png)
 
 
