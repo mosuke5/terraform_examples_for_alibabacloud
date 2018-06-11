@@ -28,7 +28,7 @@ eip = xx.xx.xx.xx
 ```
 
 Access eip address outputs show with web browser.
-![overview](/basic_sample/overview.png)
+![http_output](/basic_sample/http_output.png)
 
 
 ## Reference(Japanese)
