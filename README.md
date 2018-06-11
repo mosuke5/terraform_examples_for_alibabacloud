@@ -1,5 +1,3 @@
-[Japanse](README_JA,md)
-
 # Terraform Example for Alibaba Cloud
 - This repository is Terraform example list for Alibaba Cloud
 - Alibaba Cloud provides [terraform-provider](https://github.com/alibaba/terraform-provider). Let's use this.
