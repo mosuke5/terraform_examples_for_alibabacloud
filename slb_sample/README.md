@@ -5,7 +5,7 @@ This is the example of creating SLB/ECS, and binding ECS to SLB. This will creat
 1. Create Vswitch
 1. Create Security Group and set some rules
 1. Create two ECS instances in Vswitch
-  - Httpd and index.html including hostname will be provisioned
+    - Httpd and index.html including hostname will be provisioned
 1. Create EIP and bind it to ECS instance
 1. Create SLB instance
 1. Configure listener and binding to ECS instances
