@@ -3,5 +3,5 @@ output "wordpress_eip" {
 }
 
 output "rds_connection_string" {
-    value = "${alicloud_db_instance.rds.connections.0.connection_string}"
+    value = "${alicloud_db_instance.db.connection_string}"
 }
