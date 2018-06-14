@@ -1,70 +1,58 @@
-# ベーシックWordPress構築サンプル
-## 概要
-ECSとRDSを利用したベーシックなWordPress環境のサンプル。  
-![wordpress](/image/architecture_wordpress_sample.png)
+# WordPress example
+This is the example of building wordpress with ECS and RDS.
 
-## 利用方法
-基本的に下記の方法で実行可能です。
+1. Create VPC
+1. Create Vswitch
+1. Create Security Group and set some rules
+1. Create an ECS instance in Vswitch
+1. Create EIP and bind it to ECS instance
+1. Create a RDS instance in Vswitch and create database, db user
+1. Set ECS private ip address to RDS white list 
+
+## How to use
+You can build wordpress by following process. But if you want to operate wordpress in production, you need to configure more.
+
 ```
-// 事前準備
-$ cd wordpress_sample // 実行したいサンプルへ移動
 $ cp terraform.tfvars.sample terraform.tfvars
 $ vim terraform.tfvars 
-  -> API KEYや公開鍵など必要情報更新
+  => Edit variables with your favorite editor.
 
-// Dry-Run
-$ terraform plan -var-file="terraform.tfvars"
+// Deploy to Alibaba Cloud
+$ terraform apply
+...
+Apply complete! Resources: 12 added, 0 changed, 0 destroyed.
 
-// クラウドへ反映
-$ terraform apply -var-file="terraform.tfvars"
-(略)
-Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
-
-// 出力にRDSへの接続アドレスとEIPのアドレスが表示されます
 Outputs:
 rds_connection_string = xxxxxxxxx.rds.aliyuncs.com
 wordpress_eip = xx.xx.xx.xx
+```
 
-// ECSへ接続
+```
+// Connect to ECS instance with ssh
 $ ssh ecs-user@xx.xx.xx.xx
 
-// WordPressの設定
+// Configure wordpress
 $ cd /var/www/html/wordpress
 $ sudo cp wp-config-sample.php wp-config.php
 $ sudo vim wp-config.php
-/** WordPress のためのデータベース名 */
 define('DB_NAME', 'database_name_here');
-
-/** MySQL データベースのユーザー名 */
 define('DB_USER', 'username_here');
-
-/** MySQL データベースのパスワード */
 define('DB_PASSWORD', 'password_here');
-
-/** MySQL のホスト名 */
 define('DB_HOST', 'localhost');
-
-
-define('AUTH_KEY',         'put your unique phrase here');
-define('SECURE_AUTH_KEY',  'put your unique phrase here');
-define('LOGGED_IN_KEY',    'put your unique phrase here');
-define('NONCE_KEY',        'put your unique phrase here');
-define('AUTH_SALT',        'put your unique phrase here');
-define('SECURE_AUTH_SALT', 'put your unique phrase here');
-define('LOGGED_IN_SALT',   'put your unique phrase here');
-define('NONCE_SALT',       'put your unique phrase here');
 ```
 
-## 利用開始
-設定が完了したらブラウザから接続してみよう。  
+After deploy and configuration to `wp-config.php`, let's access to your eip address.
+You will find wordpress installation screen.
+
 `http://<your eip address>/wordpress`
 
-## ECSへのセットアップ内容
-ECSへは下記の設定が行われます。
-- Apacheのインストール
-- PHPのインストール
-- WordPressソースコードの配置
-- `ecs-user`の作成
-  - `ecs-user`のsudoersへの追加
-  - terraform.tfvarsで指定した公開鍵の配置
-- sshdはパスワード認証、rootログインの禁止
+## Provisioning to ECS
+ECS will be provisioned for following settings by Ansible.
+
+- Install Apache
+- Install PHP
+- Deploy WordPress source code
+- Create `ecs-user`
+  - Add `ecs-user` to sudoers
+  - Add your public key to `/home/ecs-user/.ssh/authorized_keys`
+- Disable password authentication and root account login
