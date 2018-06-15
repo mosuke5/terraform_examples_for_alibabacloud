@@ -1,5 +1,5 @@
 # WordPress example
-This is the example of building wordpress with ECS and RDS.
+This is the example of building wordpress with ECS and RDS. Architecture overview is [here](https://docs.google.com/presentation/d/1pqtbiJRGc3uUm8ulhMBf4SWm2WPCCrhgUInjm9DMYdc/edit?ts=5b1df94f#slide=id.g3bf33c5b60_0_25).
 
 1. Create VPC
 1. Create Vswitch
