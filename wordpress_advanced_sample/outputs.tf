@@ -10,6 +10,6 @@ output "ecs_private_ip" {
     value = "${join(",",alicloud_instance.web.*.private_ip)}"
 }
 
-output "rds_connection_string" {
-    value = "${alicloud_db_instance.rds.connections.0.connection_string}"
-}
+#output "rds_connection_string" {
+#    value = "${alicloud_db_instance.db.connections.0.connection_string}"
+#}

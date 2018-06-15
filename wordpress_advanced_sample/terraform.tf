@@ -10,48 +10,33 @@ variable "database_user_password" {}
 variable "database_name" {}
 variable "database_character" {}
 
-# Alicloud Providerの設定
 provider "alicloud" {
   access_key = "${var.access_key}"
   secret_key = "${var.secret_key}"
   region = "${var.region}"
 }
 
-# Create a new load balancer for classic
 resource "alicloud_slb" "slb" {
-  name                 = "${var.project_name}-slb"
+  name                 = "terraform-slb"
   internet             = true
   internet_charge_type = "paybytraffic"
+  bandwidth            = 5
+}
 
-  listener = [
-    {
-      "instance_port" = "80"
-      "lb_port"       = "80"
-      "lb_protocol"   = "http"
-      "bandwidth"     = "10"
-      "sticky_session" = "on"
-      "sticky_session_type" = "insert"
-      "cookie_timeout" = "1"
-      "health_check"  = "on"
-      "health_check_type" = "http"
-      "health_check_connect_port" = "80"
-      "health_check_domain" = "$_ip"
-      "health_check_uri" = "/"
-      "health_check_http_code" = "http_2xx"
-      "health_check_timeout" = "5"
-      "health_check_interval" = "5"
-      "healthy_threshold" = "3"
-      "unhealthy_threshold" = "3"
-    }
-  ]
+resource "alicloud_slb_listener" "tcp_http" {
+  load_balancer_id = "${alicloud_slb.slb.id}"
+  backend_port = "80"
+  frontend_port = "80"
+  protocol = "tcp"
+  bandwidth = "10"
+  health_check_type = "tcp"
 }
 
 resource "alicloud_slb_attachment" "slb_attachment" {
-    slb_id    = "${alicloud_slb.slb.id}"
-    instances = ["${alicloud_instance.web.*.id}"]
+  load_balancer_id = "${alicloud_slb.slb.id}"
+  instance_ids = ["${alicloud_instance.web.*.id}"]
 }
 
-# セキュリティグループの作成
 resource "alicloud_security_group" "sg_fumidai" {
   name   = "${var.project_name}-sg-fumidai"
   vpc_id = "${alicloud_vpc.vpc.id}"
@@ -117,31 +102,32 @@ resource "alicloud_security_group_rule" "wordpress_allow_ssh" {
   cidr_ip           = "0.0.0.0/0"
 }
 
-# VPCの作成
 resource "alicloud_vpc" "vpc" {
   name = "${var.project_name}-vpc"
-  cidr_block = "192.168.0.0/16"
+  cidr_block = "192.168.1.0/24"
 }
 
-# vswitchの作成。VPCの中に作ります。
 resource "alicloud_vswitch" "vsw" {
   vpc_id            = "${alicloud_vpc.vpc.id}"
-  cidr_block        = "192.168.1.0/24"
+  cidr_block        = "192.168.1.0/28"
   availability_zone = "${var.zone}"
 }
 
-# ECSに紐付けるEIP(グローバルIP)の作成
+resource "alicloud_nat_gateway" "nat_gateway" {
+  vpc_id = "${alicloud_vpc.vpc.id}"
+  specification   = "Small"
+  name   = "terraform-nat-gw"
+}
+
 resource "alicloud_eip" "eip" {
   internet_charge_type = "PayByTraffic"
 }
 
-# 作成したEIPをECSと紐付けします
 resource "alicloud_eip_association" "eip_asso" {
   allocation_id = "${alicloud_eip.eip.id}"
   instance_id   = "${alicloud_instance.fumidai.id}"
 }
 
-# ECSの作成
 resource "alicloud_instance" "web" {
   count = 2
   instance_name = "${var.project_name}-ecs-web${count.index}"
@@ -152,11 +138,10 @@ resource "alicloud_instance" "web" {
   system_disk_category = "cloud_efficiency"
   security_groups = ["${alicloud_security_group.sg_wordpress.id}"]
   vswitch_id = "${alicloud_vswitch.vsw.id}"
-  user_data = "#!/bin/bash\necho \"${var.publickey}\" > /tmp/publickey"
+  user_data = "#!/bin/bash\necho \"${var.publickey}\" > /tmp/publickey\n${file("provisioning.sh")}"
   password = "${var.password}"
 }
 
-# ECSの作成
 resource "alicloud_instance" "fumidai" {
   instance_name = "${var.project_name}-ecs-fumidai"
   host_name = "wordpress-ecs-fumidai"
@@ -166,33 +151,35 @@ resource "alicloud_instance" "fumidai" {
   system_disk_category = "cloud_efficiency"
   security_groups = ["${alicloud_security_group.sg_fumidai.id}"]
   vswitch_id = "${alicloud_vswitch.vsw.id}"
-  user_data = "#!/bin/bash\necho \"${var.publickey}\" > /tmp/publickey\n${file("provisioning_fumidai.sh")}"
+  user_data = "#!/bin/bash\necho \"${var.publickey}\" > /tmp/publickey\n${file("provisioning.sh")}"
   password = "${var.password}"
 }
 
-resource "alicloud_route_entry" "default" {
-  router_id             = "${alicloud_vpc.vpc.router_id}"
-  route_table_id        = "${alicloud_vpc.vpc.router_table_id}"
-  destination_cidrblock = "0.0.0.0/0"
-  nexthop_type          = "Instance"
-  nexthop_id            = "${alicloud_instance.fumidai.id}"
-}
-
-resource "alicloud_db_instance" "rds" {
-    engine = "MySQL"
-    engine_version = "5.6"
-    db_instance_class = "rds.mysql.s1.small"
-    db_instance_storage = "10"
-    db_instance_net_type = "Intranet"
-    vswitch_id = "${alicloud_vswitch.vsw.id}"
-    security_ips  = ["${alicloud_instance.web.*.private_ip}"]
-
-    master_user_name = "${var.database_user_name}"
-    master_user_password = "${var.database_user_password}"
-
-    db_mappings = [{
-      db_name = "${var.database_name}"
-      character_set_name = "${var.database_character}"
-      db_description = "terraform wordpress"
-    }]
-}
+#resource "alicloud_db_instance" "db" {
+#  engine           = "MySQL"
+#  engine_version   = "5.6"
+#  instance_name    = "terraform-rds"
+#  vswitch_id       = "${alicloud_vswitch.vsw.id}"
+#  security_ips     = ["${alicloud_instance.web.private_ip}"]
+#  instance_type    = "rds.mysql.t1.small"
+#  instance_storage = "50"
+#}
+#
+#resource "alicloud_db_account" "default" {
+#  instance_id = "${alicloud_db_instance.db.id}"
+#  name        = "${var.database_user_name}"
+#  password    = "${var.database_user_password}"
+#}
+#
+#resource "alicloud_db_account_privilege" "default" {
+#  instance_id  = "${alicloud_db_instance.db.id}"
+#  account_name = "${alicloud_db_account.default.name}"
+#  privilege    = "ReadWrite"
+#  db_names     = ["${alicloud_db_database.default.name}"]
+#}
+#
+#resource "alicloud_db_database" "default" {
+#  instance_id   = "${alicloud_db_instance.db.id}"
+#  name          = "${var.database_name}"
+#  character_set = "${var.database_character}"
+#}
