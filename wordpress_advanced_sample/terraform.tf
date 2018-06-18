@@ -24,12 +24,13 @@ resource "alicloud_slb" "slb" {
 }
 
 resource "alicloud_slb_listener" "tcp_http" {
-  load_balancer_id  = "${alicloud_slb.slb.id}"
-  backend_port      = "80"
-  frontend_port     = "80"
-  protocol          = "tcp"
-  bandwidth         = "10"
-  health_check_type = "tcp"
+  load_balancer_id          = "${alicloud_slb.slb.id}"
+  backend_port              = "80"
+  frontend_port             = "80"
+  protocol                  = "http"
+  bandwidth                 = "10"
+  health_check_type         = "http"
+  health_check_connect_port = "80"
 }
 
 resource "alicloud_slb_attachment" "slb_attachment" {
@@ -61,7 +62,7 @@ resource "alicloud_security_group_rule" "bastion_allow_all_from_internal" {
   port_range        = "-1/-1"
   priority          = 1
   security_group_id = "${alicloud_security_group.sg_bastion.id}"
-  cidr_ip           = "192.168.0.0/16"
+  cidr_ip           = "192.168.1.0/24"
 }
 
 resource "alicloud_security_group_rule" "bastion_allow_all_to_external" {
@@ -102,6 +103,17 @@ resource "alicloud_security_group_rule" "wordpress_allow_ssh" {
   cidr_ip           = "0.0.0.0/0"
 }
 
+resource "alicloud_security_group_rule" "wordpress_allow_all_to_external" {
+  type              = "egress"
+  ip_protocol       = "all"
+  nic_type          = "intranet"
+  policy            = "accept"
+  port_range        = "-1/-1"
+  priority          = 1
+  security_group_id = "${alicloud_security_group.sg_wordpress.id}"
+  cidr_ip           = "0.0.0.0/0"
+}
+
 resource "alicloud_vpc" "vpc" {
   name       = "${var.project_name}-vpc"
   cidr_block = "192.168.1.0/24"
@@ -119,13 +131,28 @@ resource "alicloud_nat_gateway" "nat_gateway" {
   name          = "terraform-nat-gw"
 }
 
+resource "alicloud_snat_entry" "default" {
+  snat_table_id     = "${alicloud_nat_gateway.nat_gateway.snat_table_ids}"
+  source_vswitch_id = "${alicloud_vswitch.vsw.id}"
+  snat_ip           = "${alicloud_eip.nat_eip.ip_address}"
+}
+
 resource "alicloud_eip" "eip" {
+  internet_charge_type = "PayByTraffic"
+}
+
+resource "alicloud_eip" "nat_eip" {
   internet_charge_type = "PayByTraffic"
 }
 
 resource "alicloud_eip_association" "eip_asso" {
   allocation_id = "${alicloud_eip.eip.id}"
   instance_id   = "${alicloud_instance.bastion.id}"
+}
+
+resource "alicloud_eip_association" "nat_eip_asso" {
+  allocation_id = "${alicloud_eip.nat_eip.id}"
+  instance_id   = "${alicloud_nat_gateway.nat_gateway.id}"
 }
 
 resource "alicloud_instance" "web" {
@@ -155,32 +182,31 @@ resource "alicloud_instance" "bastion" {
   password             = "${var.password}"
 }
 
-#resource "alicloud_db_instance" "db" {
-#  engine           = "MySQL"
-#  engine_version   = "5.6"
-#  instance_name    = "terraform-rds"
-#  vswitch_id       = "${alicloud_vswitch.vsw.id}"
-#  security_ips     = ["${alicloud_instance.web.private_ip}"]
-#  instance_type    = "rds.mysql.t1.small"
-#  instance_storage = "50"
-#}
-#
-#resource "alicloud_db_account" "default" {
-#  instance_id = "${alicloud_db_instance.db.id}"
-#  name        = "${var.database_user_name}"
-#  password    = "${var.database_user_password}"
-#}
-#
-#resource "alicloud_db_account_privilege" "default" {
-#  instance_id  = "${alicloud_db_instance.db.id}"
-#  account_name = "${alicloud_db_account.default.name}"
-#  privilege    = "ReadWrite"
-#  db_names     = ["${alicloud_db_database.default.name}"]
-#}
-#
-#resource "alicloud_db_database" "default" {
-#  instance_id   = "${alicloud_db_instance.db.id}"
-#  name          = "${var.database_name}"
-#  character_set = "${var.database_character}"
-#}
+resource "alicloud_db_instance" "db" {
+  engine           = "MySQL"
+  engine_version   = "5.6"
+  instance_name    = "terraform-rds"
+  vswitch_id       = "${alicloud_vswitch.vsw.id}"
+  security_ips     = ["${alicloud_instance.web.*.private_ip}"]
+  instance_type    = "rds.mysql.t1.small"
+  instance_storage = "50"
+}
 
+resource "alicloud_db_account" "default" {
+  instance_id = "${alicloud_db_instance.db.id}"
+  name        = "${var.database_user_name}"
+  password    = "${var.database_user_password}"
+}
+
+resource "alicloud_db_account_privilege" "default" {
+  instance_id  = "${alicloud_db_instance.db.id}"
+  account_name = "${alicloud_db_account.default.name}"
+  privilege    = "ReadWrite"
+  db_names     = ["${alicloud_db_database.default.name}"]
+}
+
+resource "alicloud_db_database" "default" {
+  instance_id   = "${alicloud_db_instance.db.id}"
+  name          = "${var.database_name}"
+  character_set = "${var.database_character}"
+}

@@ -22,16 +22,24 @@ $ vim terraform.tfvars
 // Deploy to Alibaba Cloud
 $ terraform apply
 ...
-Apply complete! Resources: 12 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 26 added, 0 changed, 0 destroyed.
 
 Outputs:
-rds_connection_string = xxxxxxxxx.rds.aliyuncs.com
-wordpress_eip = xx.xx.xx.xx
+
+bastion_eip = <bastion_ip>
+ecs_private_ip = <wordpress_private_ip_1>,<wordpress_private_ip_2>
+rds_connection_string = <rds_connection_address>
+slb_ip = <slb_ip>
 ```
 
 ```
-// Connect to ECS instance with ssh
-$ ssh ecs-user@xx.xx.xx.xx
+// Connect to bastion ECS instance
+$ ssh ecs-user@<bastion_ip>
+
+// Then connect to wordpress ECS instance
+// You need to do this process two times, because you have two wordpress servers.
+$ ssh ecs-user@<wordpress_private_ip_1/2>
+  -> Default ecs-user password is "Test1234"
 
 // Configure wordpress
 $ cd /var/www/html/wordpress
@@ -43,17 +51,25 @@ define('DB_PASSWORD', 'password_here');
 define('DB_HOST', 'localhost');
 ```
 
-After deploy and configuration to `wp-config.php`, let's access to your eip address.
+After deploy and configuration to `wp-config.php`, let's access to your slb ip address.
 You will find wordpress installation screen.
 
-`http://<your eip address>/wordpress`
+`http://<your slb ip address>/wordpress`
 
-## Provisioning to ECS
-ECS will be provisioned for following settings by Ansible.
+## Provisioning to ECS for wordpress
+Wordpress ECS will be provisioned to following settings by Ansible.
 
 - Install Apache
 - Install PHP
 - Deploy WordPress source code
+- Create `ecs-user`
+  - Add `ecs-user` to sudoers
+  - Add your public key to `/home/ecs-user/.ssh/authorized_keys`
+- Disable root account login
+
+## Provisioning to ECS for bastion
+Bastion ECS will be provisioned to following settings by Ansible.
+
 - Create `ecs-user`
   - Add `ecs-user` to sudoers
   - Add your public key to `/home/ecs-user/.ssh/authorized_keys`
