@@ -1,85 +1,60 @@
-# Advanced WordPress構築サンプル
-## 概要
-実践的なWordPress環境のサンプル  
-![wordpress](/image/architecture_wordpress_advanced_sample.png)
+# Advanced WordPress Example
+This is the example of building high available wordpress with SLB and ECS, RDS and so on. Architecture overview is [here](https://docs.google.com/presentation/d/1pqtbiJRGc3uUm8ulhMBf4SWm2WPCCrhgUInjm9DMYdc/edit?ts=5b1df94f#slide=id.g3bf33c5b60_0_77).
 
-- SLBの構築
-  - リスナーの設定
-  - バックエンドサーバの設定
-- ECS(WordPress用)の構築
-- ECS(踏み台用)の構築
-  - NATサーバとしての設定
-  - VRouterのルーティングテーブルへの追加
-- RDSの構築
-- VPCの構築
+1. Create VPC
+1. Create Vswitch
+1. Create Security Group and set some rules
+1. Create two ECS instances for wordpress application in Vswitch
+1. Create one ECS instance for bastion server in Vswitch
+1. Create EIP and bind it to bastion ECS instance
+1. Create NAT Gateway and add it to route table of VRouter
+1. Create a RDS instance in Vswitch and create database, db user
+1. Set ECS private ip address to RDS white list 
 
-## 利用方法
-基本的に下記の方法で実行可能です。
+## How to use
+You can build wordpress by following process. But if you want to operate wordpress in production environment, you need to configure more.
+
 ```
-// 事前準備
-$ cd wordpress_advanced_sample // 実行したいサンプルへ移動
 $ cp terraform.tfvars.sample terraform.tfvars
 $ vim terraform.tfvars 
-  -> API KEYや公開鍵など必要情報更新
+  => Edit variables with your favorite editor.
 
-// Dry-Run
-$ terraform plan -var-file="terraform.tfvars"
+// Deploy to Alibaba Cloud
+$ terraform apply
+...
+Apply complete! Resources: 12 added, 0 changed, 0 destroyed.
 
-// クラウドへ反映
-$ terraform apply -var-file="terraform.tfvars"
-(略)
-Apply complete! Resources: x added, 0 changed, 0 destroyed.
-
-// 出力にRDSへの接続アドレスや踏み台のEIPのアドレスなどが表示されます
 Outputs:
-ecs_private_ip = 192.168.1.xx,192.168.1.xx
-fumidai_eip = xx.xx.xx.xx
-slb_ip = yy.yy.yy.yy
 rds_connection_string = xxxxxxxxx.rds.aliyuncs.com
+wordpress_eip = xx.xx.xx.xx
+```
 
-// 踏み台ECSへ接続
+```
+// Connect to ECS instance with ssh
 $ ssh ecs-user@xx.xx.xx.xx
 
-// WordPress ECSへ接続
-$ ssh root@192.168.1.xx
-
-// WordPress ECSの設定
-$ wget https://raw.githubusercontent.com/mosuke5/terraform_for_alibabacloud_examples/master/wordpress_advanced_sample/provisioning_wordpress.sh
-$ sh provisioning_wordpress.sh
-/* このスクリプトで下記を行います
-  - ecs-userの作成(パスワードはデフォルトではTest1234)
-  - php, apacheのインストール
-  - wordpressの配置
-  - sshの設定(rootログイン禁止)
-*/
-
-// WordPressの設定
+// Configure wordpress
 $ cd /var/www/html/wordpress
 $ sudo cp wp-config-sample.php wp-config.php
 $ sudo vim wp-config.php
-/** WordPress のためのデータベース名 */
 define('DB_NAME', 'database_name_here');
-
-/** MySQL データベースのユーザー名 */
 define('DB_USER', 'username_here');
-
-/** MySQL データベースのパスワード */
 define('DB_PASSWORD', 'password_here');
-
-/** MySQL のホスト名 */
 define('DB_HOST', 'localhost');
-
-
-define('AUTH_KEY',         'put your unique phrase here');
-define('SECURE_AUTH_KEY',  'put your unique phrase here');
-define('LOGGED_IN_KEY',    'put your unique phrase here');
-define('NONCE_KEY',        'put your unique phrase here');
-define('AUTH_SALT',        'put your unique phrase here');
-define('SECURE_AUTH_SALT', 'put your unique phrase here');
-define('LOGGED_IN_SALT',   'put your unique phrase here');
-define('NONCE_SALT',       'put your unique phrase here');
 ```
 
-## 利用開始
-設定が完了したらブラウザから接続してみよう。  
-`http://<your slb address>/wordpress`
+After deploy and configuration to `wp-config.php`, let's access to your eip address.
+You will find wordpress installation screen.
+
+`http://<your eip address>/wordpress`
+
+## Provisioning to ECS
+ECS will be provisioned for following settings by Ansible.
+
+- Install Apache
+- Install PHP
+- Deploy WordPress source code
+- Create `ecs-user`
+  - Add `ecs-user` to sudoers
+  - Add your public key to `/home/ecs-user/.ssh/authorized_keys`
+- Disable password authentication and root account login

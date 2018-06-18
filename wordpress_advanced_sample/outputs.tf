@@ -2,7 +2,7 @@ output "slb_ip" {
     value = "${alicloud_slb.slb.address}"
 }
 
-output "fumidai_eip" {
+output "bastion_eip" {
     value = "${alicloud_eip.eip.ip_address}"
 }
 
