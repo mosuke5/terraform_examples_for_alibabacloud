@@ -2,7 +2,7 @@
 - hosts: 127.0.0.1
   connection: local
   vars:
-    wordpress_url: "https://ja.wordpress.org/wordpress-4.8-ja.tar.gz"
+    wordpress_url: "https://wordpress.org/wordpress-4.9.6.tar.gz"
     user_name: "ecs-user"
   tasks:
   - name: be sure httpd is installed

@@ -1,11 +1,12 @@
-# マルチゾーンをわたるMongoDBクラスタを構築サンプル
+# MongoDB cluster example 
+This is the repository to build multi-az MongoDb cluster.
+
 ![mongo](/image/architecture_mongo_cluster.png)
 
-このサンプルを実行するためには、各ゾーンのサブネット (vswitch作成)CIDRの設定とmongoインスタンススペックの設定
-が必要です。そして、システムを管理するために、`mongoadmin`ユーザーが作成されます。`mongoadmin`ユーザーへログイン
-するためには、各プロビジョンスクリプト (`provision_mongo.sh`及び`provision_snat.sh`)に、`mongoadmin`ユーザーの
-公開鍵と秘密鍵を設定する必要があります。
+You need to configure subnet(vswitch) and CIDR, mongodb instance spec.
+Provisioning scripts(`provision_mongo.sh` and `provision_snat.sh`) will provision `mongoadmin` user. In order to manage MongoDB, you can login as `mongodadmin` user. So, you need to configure your publickey and privatekey to `terraform.tfvars`.
 
+Following is example of `terraform.tfvars`.
 ```
 secret_key = ""
 access_key = ""
