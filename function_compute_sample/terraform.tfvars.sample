@@ -1,0 +1,4 @@
+access_key = "xxxxxxxxxxxxxxxxxx"
+secret_key = "xxxxxxxxxxxxxxxxxx"
+oss_bucket = "xxxxxxx"
+region = "ap-northeast-1"
