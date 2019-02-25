@@ -1,5 +1,6 @@
 access_key               = "YOUR_ACCESS_KEY"
 secret_key               = "YOUR_SECRET_KEY"
+publickey                = "YOUR_PUBLICK_KEY"
 region-a                 = "ap-northeast-1"
 region-b                 = "cn-shanghai"
 vpc_name_region-a        = "vpc_test"

@@ -22,3 +22,5 @@ variable "ssl_vpn_client_cert_name" {}
 
 variable "zone_region-a" {}
 variable "zone_region-b" {}
+
+variable "publickey" {}

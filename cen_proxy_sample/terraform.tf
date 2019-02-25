@@ -63,6 +63,7 @@ resource "alicloud_vpn_gateway" "vpn-gateway" {
   name                 = "${var.vpn_gateway_name}"
   vpc_id               = "${alicloud_vpc.vpc_region-b.id}"
   bandwidth            = "10"
+  enable_ipsec         = false
   enable_ssl           = true
   instance_charge_type = "PostPaid"
   description          = "${var.vpn_gateway_description}"
@@ -92,17 +93,36 @@ resource "alicloud_security_group" "sg_region-a" {
   vpc_id   = "${alicloud_vpc.vpc_region-a.id}"
 }
 
-resource "alicloud_security_group_rule" "allow_icmp_region-a" {
+resource "alicloud_security_group_rule" "allow_ssh-a" {
   provider          = "alicloud.region-a"
   type              = "ingress"
-  ip_protocol       = "icmp"
+  ip_protocol       = "tcp"
   nic_type          = "intranet"
   policy            = "accept"
-  port_range        = "-1/-1"
+  port_range        = "22/22"
   priority          = 1
   security_group_id = "${alicloud_security_group.sg_region-a.id}"
   cidr_ip           = "0.0.0.0/0"
 }
+
+resource "alicloud_security_group" "sg_region-b" {
+  provider = "alicloud.region-b"
+  name     = "terraform-sg"
+  vpc_id   = "${alicloud_vpc.vpc_region-b.id}"
+}
+
+resource "alicloud_security_group_rule" "allow_ssh_region-b" {
+  provider          = "alicloud.region-b"
+  type              = "ingress"
+  ip_protocol       = "tcp"
+  nic_type          = "intranet"
+  policy            = "accept"
+  port_range        = "22/22"
+  priority          = 1
+  security_group_id = "${alicloud_security_group.sg_region-b.id}"
+  cidr_ip           = "0.0.0.0/0"
+}
+
 
 resource "alicloud_cen_route_entry" "vpn" {
     provider       = "alicloud.region-b"
@@ -110,11 +130,11 @@ resource "alicloud_cen_route_entry" "vpn" {
     route_table_id = "${alicloud_vpc.vpc_region-b.route_table_id}"
     cidr_block     = "${var.client_ip_pool}"
     depends_on     = [
-        "alicloud_cen_instance_attachment.attachment_region-b"
+        "alicloud_ssl_vpn_server.ssl-vpn-server"
     ]
 }
 
-resource "alicloud_instance" "proxy" {
+resource "alicloud_instance" "proxy-a" {
   provider             = "alicloud.region-a"
   instance_name        = "terraform-ecs"
   host_name            = "proxy-ecs"
@@ -124,4 +144,38 @@ resource "alicloud_instance" "proxy" {
   system_disk_category = "cloud_efficiency"
   security_groups      = ["${alicloud_security_group.sg_region-a.id}"]
   vswitch_id           = "${alicloud_vswitch.vsw_region-a.id}"
+  user_data            = "#!/bin/bash\nmkdir -p /root/.ssh\nchmod 700 /root/.ssh\necho \"${var.publickey}\" > /root/.ssh/authorized_keys\nchmod 400 /root/.ssh/authorized_keys}"
+}
+
+resource "alicloud_instance" "proxy-b" {
+  provider             = "alicloud.region-b"
+  instance_name        = "terraform-ecs"
+  host_name            = "proxy-ecs"
+  availability_zone    = "${var.zone_region-b}"
+  image_id             = "centos_7_3_64_40G_base_20170322.vhd"
+  instance_type        = "ecs.n4.small"
+  system_disk_category = "cloud_efficiency"
+  security_groups      = ["${alicloud_security_group.sg_region-b.id}"]
+  vswitch_id           = "${alicloud_vswitch.vsw_region-b.id}"
+  user_data            = "#!/bin/bash\nmkdir -p /root/.ssh\nchmod 700 /root/.ssh\necho \"${var.publickey}\" > /root/.ssh/authorized_keys\nchmod 400 /root/.ssh/authorized_keys}"
+}
+
+resource "alicloud_eip" "eip-a" {
+  provider             = "alicloud.region-a"
+}
+
+resource "alicloud_eip" "eip-b" {
+  provider             = "alicloud.region-b"
+}
+
+resource "alicloud_eip_association" "eip_associate-a" {
+  provider             = "alicloud.region-a"
+  allocation_id = "${alicloud_eip.eip-a.id}"
+  instance_id   = "${alicloud_instance.proxy-a.id}"
+}
+
+resource "alicloud_eip_association" "eip_associate-b" {
+  provider             = "alicloud.region-b"
+  allocation_id = "${alicloud_eip.eip-b.id}"
+  instance_id   = "${alicloud_instance.proxy-b.id}"
 }
