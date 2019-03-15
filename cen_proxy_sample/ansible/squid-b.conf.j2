@@ -1,0 +1,9 @@
+cache_peer {{ ansible_env.PROXY_A_IP }}  parent 8080 0 no-query
+http_port 8080
+icp_port 0
+visible_hostname proxy-b
+http_access allow all
+
+acl transfer dstdomain {{ ansible_env.DEST_DOMAIN }}
+cache_peer_access {{ ansible_env.PROXY_A_IP }} allow transfer
+never_direct allow transfer
