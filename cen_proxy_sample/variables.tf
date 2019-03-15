@@ -24,3 +24,7 @@ variable "zone_region-a" {}
 variable "zone_region-b" {}
 
 variable "publickey" {}
+variable "dest-domain" {}
+variable "ecs-password" {
+  default = "Test1234!"
+}

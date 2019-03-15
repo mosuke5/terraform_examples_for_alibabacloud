@@ -63,7 +63,6 @@ resource "alicloud_vpn_gateway" "vpn-gateway" {
   name                 = "${var.vpn_gateway_name}"
   vpc_id               = "${alicloud_vpc.vpc_region-b.id}"
   bandwidth            = "10"
-  enable_ipsec         = false
   enable_ssl           = true
   instance_charge_type = "PostPaid"
   description          = "${var.vpn_gateway_description}"
@@ -74,7 +73,7 @@ resource "alicloud_ssl_vpn_server" "ssl-vpn-server" {
   name           = "${var.ssl_vpn_server_name}"
   vpn_gateway_id = "${alicloud_vpn_gateway.vpn-gateway.id}"
   client_ip_pool = "${var.client_ip_pool}"
-  local_subnet   = "${alicloud_vpc.vpc_region-a.cidr_block}"
+  local_subnet   = "${alicloud_vswitch.vsw_region-b.cidr_block}"
   protocol       = "UDP"
   cipher         = "AES-128-CBC"
   port           = 1194
@@ -93,7 +92,19 @@ resource "alicloud_security_group" "sg_region-a" {
   vpc_id   = "${alicloud_vpc.vpc_region-a.id}"
 }
 
-resource "alicloud_security_group_rule" "allow_ssh-a" {
+resource "alicloud_security_group_rule" "allow_icmp_region-a" {
+  provider          = "alicloud.region-a"
+  type              = "ingress"
+  ip_protocol       = "icmp"
+  nic_type          = "intranet"
+  policy            = "accept"
+  port_range        = "-1/-1"
+  priority          = 1
+  security_group_id = "${alicloud_security_group.sg_region-a.id}"
+  cidr_ip           = "0.0.0.0/0"
+}
+
+resource "alicloud_security_group_rule" "allow_ssh_region-a" {
   provider          = "alicloud.region-a"
   type              = "ingress"
   ip_protocol       = "tcp"
@@ -105,10 +116,34 @@ resource "alicloud_security_group_rule" "allow_ssh-a" {
   cidr_ip           = "0.0.0.0/0"
 }
 
+resource "alicloud_security_group_rule" "allow_proxy_access_region-a" {
+  provider          = "alicloud.region-a"
+  type              = "ingress"
+  ip_protocol       = "tcp"
+  nic_type          = "intranet"
+  policy            = "accept"
+  port_range        = "8080/8080"
+  priority          = 1
+  security_group_id = "${alicloud_security_group.sg_region-a.id}"
+  cidr_ip           = "${alicloud_instance.proxy-b.private_ip}"
+}
+
 resource "alicloud_security_group" "sg_region-b" {
   provider = "alicloud.region-b"
   name     = "terraform-sg"
   vpc_id   = "${alicloud_vpc.vpc_region-b.id}"
+}
+
+resource "alicloud_security_group_rule" "allow_icmp_region-b" {
+  provider          = "alicloud.region-b"
+  type              = "ingress"
+  ip_protocol       = "icmp"
+  nic_type          = "intranet"
+  policy            = "accept"
+  port_range        = "-1/-1"
+  priority          = 1
+  security_group_id = "${alicloud_security_group.sg_region-b.id}"
+  cidr_ip           = "0.0.0.0/0"
 }
 
 resource "alicloud_security_group_rule" "allow_ssh_region-b" {
@@ -123,6 +158,18 @@ resource "alicloud_security_group_rule" "allow_ssh_region-b" {
   cidr_ip           = "0.0.0.0/0"
 }
 
+resource "alicloud_security_group_rule" "allow_proxy_access_region-b" {
+  provider          = "alicloud.region-b"
+  type              = "ingress"
+  ip_protocol       = "tcp"
+  nic_type          = "intranet"
+  policy            = "accept"
+  port_range        = "8080/8080"
+  priority          = 1
+  security_group_id = "${alicloud_security_group.sg_region-b.id}"
+  cidr_ip           = "${alicloud_ssl_vpn_server.ssl-vpn-server.client_ip_pool}"
+}
+
 
 resource "alicloud_cen_route_entry" "vpn" {
     provider       = "alicloud.region-b"
@@ -132,6 +179,14 @@ resource "alicloud_cen_route_entry" "vpn" {
     depends_on     = [
         "alicloud_ssl_vpn_server.ssl-vpn-server"
     ]
+}
+
+resource "alicloud_eip" "eip-a" {
+  provider = "alicloud.region-a"
+}
+
+resource "alicloud_eip" "eip-b" {
+  provider = "alicloud.region-b"
 }
 
 resource "alicloud_instance" "proxy-a" {
@@ -144,7 +199,13 @@ resource "alicloud_instance" "proxy-a" {
   system_disk_category = "cloud_efficiency"
   security_groups      = ["${alicloud_security_group.sg_region-a.id}"]
   vswitch_id           = "${alicloud_vswitch.vsw_region-a.id}"
-  user_data            = "#!/bin/bash\nmkdir -p /root/.ssh\nchmod 700 /root/.ssh\necho \"${var.publickey}\" > /root/.ssh/authorized_keys\nchmod 400 /root/.ssh/authorized_keys}"
+  user_data            = "#!/bin/bash\necho \"${file("ansible/playbook.yml")}\" > /tmp/playbook.yml\necho \"${file("ansible/squid-a.conf.j2")}\" > /tmp/squid.conf.j2\n${data.template_file.prv-proxy-a.rendered}"
+}
+
+resource "alicloud_eip_association" "eip-a-ass" {
+  provider   = "alicloud.region-a"
+  allocation_id = "${alicloud_eip.eip-a.id}"
+  instance_id   = "${alicloud_instance.proxy-a.id}"
 }
 
 resource "alicloud_instance" "proxy-b" {
@@ -157,25 +218,29 @@ resource "alicloud_instance" "proxy-b" {
   system_disk_category = "cloud_efficiency"
   security_groups      = ["${alicloud_security_group.sg_region-b.id}"]
   vswitch_id           = "${alicloud_vswitch.vsw_region-b.id}"
-  user_data            = "#!/bin/bash\nmkdir -p /root/.ssh\nchmod 700 /root/.ssh\necho \"${var.publickey}\" > /root/.ssh/authorized_keys\nchmod 400 /root/.ssh/authorized_keys}"
+  user_data            = "#!/bin/bash\necho \"${file("ansible/playbook.yml")}\" > /tmp/playbook.yml\necho \"${file("ansible/squid-b.conf.j2")}\" > /tmp/squid.conf.j2\n${data.template_file.prv-proxy-b.rendered}"
 }
 
-resource "alicloud_eip" "eip-a" {
-  provider             = "alicloud.region-a"
-}
-
-resource "alicloud_eip" "eip-b" {
-  provider             = "alicloud.region-b"
-}
-
-resource "alicloud_eip_association" "eip_associate-a" {
-  provider             = "alicloud.region-a"
-  allocation_id = "${alicloud_eip.eip-a.id}"
-  instance_id   = "${alicloud_instance.proxy-a.id}"
-}
-
-resource "alicloud_eip_association" "eip_associate-b" {
-  provider             = "alicloud.region-b"
+resource "alicloud_eip_association" "eip-b-ass" {
+  provider   = "alicloud.region-b"
   allocation_id = "${alicloud_eip.eip-b.id}"
   instance_id   = "${alicloud_instance.proxy-b.id}"
+}
+
+data "template_file" "prv-proxy-a" {
+  template = "${file("templates/provisioning-proxy-a.tpl")}"
+  vars = {
+    password   = "${var.ecs-password}"
+    publickey  = "${var.publickey}"
+  }
+}
+
+data "template_file" "prv-proxy-b" {
+  template = "${file("templates/provisioning-proxy-b.tpl")}"
+  vars = {
+    password    = "${var.ecs-password}"
+    publickey   = "${var.publickey}"
+    proxy-a-ip  = "${alicloud_instance.proxy-a.private_ip}"
+    dest-domain = "${var.dest-domain}"
+  }
 }

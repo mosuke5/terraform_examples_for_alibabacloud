@@ -1,0 +1,17 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+  - name: be sure squid is installed
+    yum: name=squid state=installed
+
+  - name: be sure squid is running and enabled
+    service: name=squid state=started enabled=yes
+
+  - name: set squid.conf
+    template:
+      src: squid.conf.j2
+      dest: /etc/squid/squid.conf
+
+  - name: restart squid
+    service: name=squid state=restarted
