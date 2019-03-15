@@ -169,8 +169,6 @@ resource "alicloud_security_group_rule" "allow_proxy_access_region-b" {
   security_group_id = "${alicloud_security_group.sg_region-b.id}"
   cidr_ip           = "${alicloud_ssl_vpn_server.ssl-vpn-server.client_ip_pool}"
 }
-
-
 resource "alicloud_cen_route_entry" "vpn" {
     provider       = "alicloud.region-b"
     instance_id    = "${alicloud_cen_instance.cen.id}"
