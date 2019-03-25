@@ -1,5 +1,5 @@
 ---
-- name: hoge
+- name: Provisioning to instances
   hosts: cloud_servers
   tasks:
   - name: be sure httpd is installed

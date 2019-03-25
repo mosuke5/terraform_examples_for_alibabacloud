@@ -19,11 +19,41 @@ $ vim terraform.tfvars
 Deploy to Alibaba Cloud
 ```
 $ ansible-playbook -i ./inventry.sh -u root
-Apply complete! Resources: 7 added, 0 changed, 0 destroyed.
+PLAY [127.0.0.1] **********************************************************************************
 
-Outputs:
+TASK [Gathering Facts] ****************************************************************************
+ok: [127.0.0.1]
 
-eip = xx.xx.xx.xx
+TASK [Exec terraform scripts] *********************************************************************
+changed: [127.0.0.1]
+
+TASK [Wait for port 22 to open] *******************************************************************
+ok: [127.0.0.1] => (item=161.117.3.12)
+ok: [127.0.0.1] => (item=47.74.216.15)
+ok: [127.0.0.1] => (item=47.74.217.96)
+
+PLAY [Provisioning to instances] ******************************************************************
+
+TASK [Gathering Facts] ****************************************************************************
+ok: [47.74.216.15]
+ok: [47.74.217.96]
+ok: [161.117.3.12]
+
+TASK [be sure httpd is installed] *****************************************************************
+changed: [161.117.3.12]
+changed: [47.74.216.15]
+changed: [47.74.217.96]
+
+TASK [be sure httpd is running and enabled] *******************************************************
+changed: [47.74.217.96]
+changed: [47.74.216.15]
+changed: [161.117.3.12]
+
+PLAY RECAP ****************************************************************************************
+127.0.0.1                  : ok=3    changed=1    unreachable=0    failed=0
+161.117.3.12               : ok=3    changed=2    unreachable=0    failed=0
+47.74.216.15               : ok=3    changed=2    unreachable=0    failed=0
+47.74.217.96               : ok=3    changed=2    unreachable=0    failed=0
 ```
 
 ## Reference
