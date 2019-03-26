@@ -1,0 +1,19 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+  - name: Exec terraform scripts
+    terraform:
+      project_path: 'terraform/'
+      state: present
+
+  - name: Refresh inventory because of creating cloud servers
+    meta: refresh_inventory
+
+  - name: Wait for port 22 to open
+    wait_for:
+      port: 22
+      host: "{{ item }}"
+      delay: 10
+      timeout: 30
+    with_items: "{{ groups['cloud_servers'] }}"
